@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14151a">
+<title>밸런스 게임</title>
+<style>
+:root{--bg:#14151a;--card:#1f2128;--text:#f2f3f5;--sub:#9aa0ac;--a:#ff5a6e;--b:#3d8bff;--line:#2d303a}
+@media (prefers-color-scheme:light){:root{--bg:#f4f5f8;--card:#fff;--text:#16171b;--sub:#656b78;--line:#e1e3e9}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);display:flex;justify-content:center}
+main{width:100%;max-width:520px;display:flex;flex-direction:column;min-height:100%;padding:20px 0}
+h1{font-size:28px;margin:8px 0 4px}
+p.sub{color:var(--sub);margin:0 0 20px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 14px;border-radius:999px;font-size:15px;cursor:pointer}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn{width:100%;border:0;border-radius:16px;padding:18px;font-size:18px;font-weight:700;cursor:pointer;background:var(--text);color:var(--bg)}
+.btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--line);margin-top:10px;font-weight:600;font-size:16px}
+.hide{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;color:var(--sub);font-size:14px;margin-bottom:10px}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:18px}
+.bar i{display:block;height:100%;width:0;background:var(--text);transition:width .25s}
+.q{text-align:center;color:var(--sub);margin:6px 0 14px}
+.choices{display:flex;flex-direction:column;gap:12px;flex:1}
+.choice{flex:1;min-height:150px;border:0;border-radius:22px;color:#fff;font-size:22px;font-weight:700;line-height:1.4;padding:22px;cursor:pointer;word-break:keep-all;transition:transform .12s, opacity .2s}
+.choice:active{transform:scale(.97)}
+.choice.a{background:var(--a)}.choice.b{background:var(--b)}
+.choice.dim{opacity:.35}
+.vs{align-self:center;font-weight:800;color:var(--sub);margin:-4px 0}
+.rows{margin:12px 0 18px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:15px;line-height:1.5}
+.row small{color:var(--sub);display:block}
+.row b{color:var(--a)}.row b.b{color:var(--b)}
+.big{font-size:44px;text-align:center;margin:10px 0}
+.foot{color:var(--sub);font-size:12px;text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+ <section id="home">
+  <h1>⚖️ 밸런스 게임</h1>
+  <p class="sub">둘 중 하나만 골라야 해요. 와이파이 없이 LTE로도, 폰·노트북 어디서나 열려요.</p>
+  <div class="chips" id="chips"></div>
+  <button class="btn" id="start">시작하기</button>
+  <button class="btn ghost" id="share0">친구에게 링크 공유</button>
+ </section>
+
+ <section id="play" class="hide" style="display:flex;flex-direction:column;flex:1">
+  <div class="top"><span id="cat"></span><span id="pos"></span></div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="q" id="qn"></div>
+  <div class="choices">
+   <button class="choice a" id="ca"></button>
+   <div class="vs">VS</div>
+   <button class="choice b" id="cb"></button>
+  </div>
+  <button class="btn ghost" id="quit">그만하기</button>
+ </section>
+
+ <section id="end" class="hide">
+  <div class="big">🎉</div>
+  <h1 style="text-align:center">끝!</h1>
+  <p class="sub" style="text-align:center" id="sum"></p>
+  <div class="rows" id="rows"></div>
+  <button class="btn" id="again">다시 하기</button>
+  <button class="btn ghost" id="share1">링크 공유</button>
+ </section>
+ <div class="foot">내 선택은 이 기기에만 저장돼요.</div>
+</main>
+
+<script>
+const Q=[
+// 음식
+["음식","평생 치킨만 먹기","평생 피자만 먹기"],
+["음식","라면에 밥 말기","라면에 밥 안 말기"],
+["음식","민트초코 평생 금지","파인애플 피자 평생 금지"],
+["음식","물냉면","비빔냉면"],
+["음식","탕수육 부먹","탕수육 찍먹"],
+["음식","아침 안 먹고 점심 두 배","아침·점심 보통, 저녁 굶기"],
+["음식","매운 음식 못 먹기","단 음식 못 먹기"],
+["음식","평생 커피 못 마시기","평생 탄산 못 마시기"],
+// 연애
+["연애","연락 칼답인데 만남 적은 사람","연락 느린데 매일 만나는 사람"],
+["연애","전 애인과 같은 반 되기","현 애인 전 애인과 친구인 거 알기"],
+["연애","10년 사귄 사람과 결혼","운명 같은 첫눈에 반한 사람과 결혼"],
+["연애","내 폰 검사받기","상대 폰 검사하기"],
+["연애","기념일 매번 챙기는 사람","기념일 안 챙기지만 평소에 잘하는 사람"],
+["연애","데이트 늘 집에서","데이트 늘 밖에서"],
+// 일상
+["일상","1년 동안 샤워 못 하기, 대신 1억","정상 생활, 보상 없음"],
+["일상","평생 여름만 살기","평생 겨울만 살기"],
+["일상","하루 4시간만 자도 멀쩡","하루 10시간 자야 하지만 항상 개운"],
+["일상","순간이동 능력","투명인간 능력"],
+["일상","과거로 가기","미래로 가기"],
+["일상","핸드폰 없이 한 달","노트북 없이 한 달"],
+["일상","평생 이어폰 한쪽만 사용","평생 양쪽 다 쓰지만 가끔 노래 끊김"],
+["일상","친구 많고 얕은 관계","친구 둘뿐인 깊은 관계"],
+["일상","월 300 받는 칼퇴 직장","월 600 받는 야근 직장"],
+["일상","매일 지각 면제권","매일 1만 원 받기"],
+["일상","SNS 영구 삭제","유튜브·넷플릭스 영구 삭제"],
+["일상","내 생각이 남들에게 들리기 하루","내 검색 기록이 공개되기 하루"],
+// 극한
+["극한","모기 100마리와 한방","바퀴벌레 3마리와 한방"],
+["극한","화장실 없는 곳에서 하루","샤워 불가 일주일"],
+["극한","좀비 세상에서 혼자 생존","좀비 세상에서 친구 3명과 약하게 생존"],
+["극한","평생 맛 못 느끼기","평생 냄새 못 맡기"],
+["극한","로또 1등 당첨, 대신 가족 모르게","로또 없음, 대신 평생 건강"],
+["극한","거짓말하면 코가 길어짐","진실만 말하게 됨"],
+// 학교·이공계
+["학교","시험 전날 벼락치기 A","꾸준히 공부한 B"],
+["학교","팀플 무임승차 팀원 있는 A+","혼자 하는 B+"],
+["학교","교수님이 내 이름 전부 암기","교수님이 내 이름 모름"],
+["학교","중간고사 없는 대신 기말 두 배","중간·기말 보통"],
+["학교","아침 9시 수업만 평생","저녁 7시 수업만 평생"],
+["학교","MATLAB 평생 쓰기","Python 평생 쓰기"],
+["학교","실험 데이터 전부 날아가기","보고서 마감 하루 전 발견하기"],
+["학교","엔진 시험 중 폭발음 소리만 나기","엔진 시험 성공하지만 아무도 안 봄"],
+["학교","풍동 실험실 상주","터빈 시험장 상주"],
+["학교","전공책 새 책 전부 지급","중고 전공책 + 월 10만 원"]
+];
+const CATS=["전체","음식","연애","일상","극한","학교"];
+let sel="전체",deck=[],i=0,ans=[];
+const $=id=>document.getElementById(id);
+function show(id){["home","play","end"].forEach(x=>$(x).classList.toggle("hide",x!==id));
+ if(id==="play")$("play").style.display="flex"}
+function chips(){const c=$("chips");c.innerHTML="";CATS.forEach(n=>{const b=document.createElement("button");
+ b.className="chip"+(n===sel?" on":"");b.textContent=n;b.onclick=()=>{sel=n;chips()};c.appendChild(b)})}
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function start(){deck=shuffle(Q.filter(q=>sel==="전체"||q[0]===sel));i=0;ans=[];show("play");render()}
+function render(){const q=deck[i];$("cat").textContent=q[0];$("pos").textContent=(i+1)+" / "+deck.length;
+ $("prog").style.width=(i/deck.length*100)+"%";$("qn").textContent="Q"+(i+1);
+ $("ca").textContent=q[1];$("cb").textContent=q[2];$("ca").classList.remove("dim");$("cb").classList.remove("dim")}
+let lock=false;
+function pick(s){if(lock)return;lock=true;ans.push(s);
+ $(s==="a"?"cb":"ca").classList.add("dim");
+ setTimeout(()=>{lock=false;i++;i>=deck.length?finish():render()},260)}
+function finish(){show("end");$("sum").textContent=deck.length+"문제를 풀었어요.";
+ $("rows").innerHTML=deck.map((q,n)=>{const a=ans[n]==="a";
+  return `<div class="row"><small>Q${n+1} · ${q[0]}</small><b class="${a?"":"b"}">${a?"A":"B"}</b> ${a?q[1]:q[2]}</div>`}).join("");
+ try{localStorage.setItem("bg_last",JSON.stringify({t:Date.now(),n:deck.length}))}catch(e){}}
+async function share(){const url=location.href.split("#")[0];
+ try{if(navigator.share){await navigator.share({title:"밸런스 게임",text:"밸런스 게임 같이 해요!",url});return}}catch(e){return}
+ try{await navigator.clipboard.writeText(url);alert("링크를 복사했어요")}catch(e){prompt("링크를 복사하세요",url)}}
+$("start").onclick=start;$("ca").onclick=()=>pick("a");$("cb").onclick=()=>pick("b");
+$("quit").onclick=()=>{ans.length?(deck=deck.slice(0,ans.length),finish()):show("home")};
+$("again").onclick=()=>show("home");$("share0").onclick=share;$("share1").onclick=share;
+chips();
+</script>
+</body>
+</html>
