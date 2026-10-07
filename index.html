@@ -3,152 +3,313 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14151a">
+<meta name="theme-color" content="#F5C518">
+<meta name="description" content="둘 중 하나만 고르는 밸런스 게임. 링크를 보내면 친구와 선택이 얼마나 겹치는지 비교할 수 있어요.">
 <title>밸런스 게임</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23F5C518' d='M0 0h32v16H0z'/%3E%3Cpath fill='%232536D4' d='M0 16h32v16H0z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root{--bg:#14151a;--card:#1f2128;--text:#f2f3f5;--sub:#9aa0ac;--a:#ff5a6e;--b:#3d8bff;--line:#2d303a}
-@media (prefers-color-scheme:light){:root{--bg:#f4f5f8;--card:#fff;--text:#16171b;--sub:#656b78;--line:#e1e3e9}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
-padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);display:flex;justify-content:center}
-main{width:100%;max-width:520px;display:flex;flex-direction:column;min-height:100%;padding:20px 0}
-h1{font-size:28px;margin:8px 0 4px}
-p.sub{color:var(--sub);margin:0 0 20px;line-height:1.5}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.chip{border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 14px;border-radius:999px;font-size:15px;cursor:pointer}
-.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
-.btn{width:100%;border:0;border-radius:16px;padding:18px;font-size:18px;font-weight:700;cursor:pointer;background:var(--text);color:var(--bg)}
-.btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--line);margin-top:10px;font-weight:600;font-size:16px}
-.hide{display:none!important}
-.top{display:flex;justify-content:space-between;align-items:center;color:var(--sub);font-size:14px;margin-bottom:10px}
-.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:18px}
-.bar i{display:block;height:100%;width:0;background:var(--text);transition:width .25s}
-.q{text-align:center;color:var(--sub);margin:6px 0 14px}
-.choices{display:flex;flex-direction:column;gap:12px;flex:1}
-.choice{flex:1;min-height:150px;border:0;border-radius:22px;color:#fff;font-size:22px;font-weight:700;line-height:1.4;padding:22px;cursor:pointer;word-break:keep-all;transition:transform .12s, opacity .2s}
-.choice:active{transform:scale(.97)}
-.choice.a{background:var(--a)}.choice.b{background:var(--b)}
-.choice.dim{opacity:.35}
-.vs{align-self:center;font-weight:800;color:var(--sub);margin:-4px 0}
-.rows{margin:12px 0 18px}
-.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:15px;line-height:1.5}
-.row small{color:var(--sub);display:block}
-.row b{color:var(--a)}.row b.b{color:var(--b)}
-.big{font-size:44px;text-align:center;margin:10px 0}
-.foot{color:var(--sub);font-size:12px;text-align:center;margin-top:18px}
+:root{
+  --a:#F5C518; --b:#2536D4; --ink:#12141A; --ground:#E9EBEF;
+  --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom);
+  --col:max(28px, calc((100vw - 520px) / 2));
+  --dy:14vh; --rot:-5deg;
+}
+@supports (height:1dvh){:root{--dy:14dvh}}
+*{box-sizing:border-box}
+html{color-scheme:light;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  -webkit-font-smoothing:antialiased;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:none;word-break:keep-all}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+button:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.disp{font-family:"Black Han Sans","Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-weight:400}
+
+/* 저울: 두 판을 가르는 기울어진 경계선 */
+.scale{position:relative;overflow:hidden;isolation:isolate;background:var(--a)}
+.full{height:100vh;height:100dvh}
+.beam{position:absolute;left:50%;top:50%;width:300vmax;height:300vmax;margin:-150vmax 0 0 -150vmax;
+  transform:translateY(calc(var(--k,0) * var(--dy))) rotate(calc(var(--base,0deg) + var(--k,0) * var(--rot)));
+  transition:transform .42s cubic-bezier(.3,.7,.2,1);will-change:transform;z-index:0}
+.half{position:absolute;left:0;width:100%;height:50%}
+.half.a{top:0;background:var(--a)}
+.half.b{top:50%;background:var(--b)}
+.pane{position:absolute;left:0;right:0;height:50%;display:flex;flex-direction:column;padding-inline:var(--col);z-index:1}
+.pane.top{top:0;justify-content:flex-end;color:var(--ink)}
+.pane.bot{top:50%;justify-content:flex-start;color:#fff}
+.pivot{position:absolute;left:50%;top:50%;z-index:4}
+.dot{width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--ink);
+  box-shadow:0 0 0 4px var(--ground);pointer-events:none}
+
+/* 홈 */
+#home .pane.top{padding-top:calc(var(--st) + 24px);padding-bottom:76px}
+#home .pane.bot{padding-top:80px;padding-bottom:calc(var(--sb) + 24px)}
+h1.disp{font-size:clamp(50px,15.5vw,80px);line-height:1.02;margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
+.lead{margin:0;font-size:17px;line-height:1.55;max-width:19em;text-wrap:pretty}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.cat{min-height:44px;padding:0 16px;border-radius:10px;font-size:16px;font-weight:600;color:#fff;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55);transition:background-color .15s,color .15s}
+@media (hover:hover){.cat:hover{background:rgba(255,255,255,.18)}.btn.primary:hover{background:#2a2e3a}.btn.alt:hover{background:rgba(18,20,26,.06)}}
+.cat[aria-pressed="true"]{background:#fff;color:var(--b);box-shadow:none}
+.textbtn{min-height:44px;padding:0 2px;font-size:16px;font-weight:600;text-decoration:underline;text-underline-offset:4px;align-self:flex-start}
+.start{width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:var(--ink);color:#fff;font-size:24px;
+  box-shadow:0 0 0 6px var(--ground),0 10px 24px rgba(18,20,26,.28);
+  transition:scale .12s}
+.start:active{scale:.95}
+
+/* 플레이 */
+.bar{position:absolute;z-index:3;left:0;right:0;top:var(--st);height:56px;display:flex;justify-content:space-between;
+  align-items:center;padding:0 calc(var(--col) - 16px) 0 var(--col);color:var(--ink);font-size:15px;font-weight:600}
+.bar .count{font-variant-numeric:tabular-nums}
+.bar button{min-height:44px;min-width:44px;padding:0 16px;font-weight:600}
+.choice{position:absolute;left:0;right:0;height:50%;z-index:1;display:flex;align-items:center;text-align:left;
+  padding-inline:var(--col)}
+.choice.top{top:0;padding-top:calc(var(--st) + 56px);padding-bottom:40px;color:var(--ink)}
+.choice.bot{top:50%;padding-top:40px;padding-bottom:calc(var(--sb) + 28px);color:#fff}
+.choice:focus-visible{outline-offset:-10px}
+.lab{display:block;font-size:clamp(27px,7.6vw,40px);line-height:1.28;letter-spacing:-.005em;max-width:15em;
+  text-wrap:balance;transform-origin:left center;transition:scale .18s cubic-bezier(.3,.7,.2,1),opacity .2s}
+@media (hover:hover){.choice:hover .lab{scale:1.02}}
+.choice:active .lab{scale:.98}
+.choice.won .lab{scale:1.05}
+.choice.lost .lab{opacity:.22}
+
+/* 결과 */
+.hero{height:48vh;height:48dvh;min-height:340px;--dy:6vh;--rot:-7deg}
+@supports (height:1dvh){.hero{--dy:6dvh}}
+.hero .beam{transition-duration:.95s}
+#end .pane.top{padding-bottom:44px}
+#end .pane.bot{padding-top:44px}
+.num{font-size:clamp(68px,23vw,116px);line-height:.92;font-variant-numeric:tabular-nums;margin:0}
+.cap{margin:8px 0 0;font-size:17px;font-weight:600;line-height:1.45;max-width:18em;text-wrap:pretty}
+.wrap{max-width:560px;margin:0 auto;padding:24px 20px calc(var(--sb) + 48px)}
+.actions{display:flex;flex-direction:column;gap:10px}
+.btn{min-height:56px;border-radius:14px;font-size:17px;font-weight:700;padding:0 20px;transition:scale .12s}
+.btn:active{scale:.98}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.alt{box-shadow:inset 0 0 0 1.5px rgba(18,20,26,.3)}
+.status{min-height:22px;margin:10px 2px 0;font-size:14px;color:rgba(18,20,26,.7)}
+h2{font-size:18px;margin:26px 0 6px}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:grid;grid-template-columns:14px 1fr auto;gap:14px;padding:14px 0;align-items:start}
+.sw{width:14px;height:14px;border-radius:3px;margin-top:5px}
+.sw.a{background:var(--a)} .sw.b{background:var(--b)}
+.pick{font-size:17px;font-weight:650;line-height:1.45;text-wrap:pretty}
+.drop{display:block;margin-top:2px;font-size:14px;font-weight:400;line-height:1.45;color:rgba(18,20,26,.55);text-decoration:line-through}
+.tag{font-size:13px;font-weight:600;padding-top:3px;white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce){
+  .beam,.lab,.start,.btn,.cat{transition:none}
+}
 </style>
 </head>
 <body>
+
 <main>
- <section id="home">
-  <h1>⚖️ 밸런스 게임</h1>
-  <p class="sub">둘 중 하나만 골라야 해요. 와이파이 없이 LTE로도, 폰·노트북 어디서나 열려요.</p>
-  <div class="chips" id="chips"></div>
-  <button class="btn" id="start">시작하기</button>
-  <button class="btn ghost" id="share0">친구에게 링크 공유</button>
- </section>
-
- <section id="play" class="hide" style="display:flex;flex-direction:column;flex:1">
-  <div class="top"><span id="cat"></span><span id="pos"></span></div>
-  <div class="bar"><i id="prog"></i></div>
-  <div class="q" id="qn"></div>
-  <div class="choices">
-   <button class="choice a" id="ca"></button>
-   <div class="vs">VS</div>
-   <button class="choice b" id="cb"></button>
+<section id="home" class="screen">
+  <div class="scale full">
+    <div class="beam" style="--base:-3deg"><i class="half a"></i><i class="half b"></i></div>
+    <div class="pane top">
+      <h1 class="disp">밸런스<br>게임</h1>
+      <p class="lead" id="lead"></p>
+    </div>
+    <div class="pane bot">
+      <div class="cats" id="cats" role="group" aria-label="주제 선택"></div>
+      <button class="textbtn" id="solo" hidden>혼자 새로 하기</button>
+    </div>
+    <button class="pivot start disp" id="start">시작</button>
   </div>
-  <button class="btn ghost" id="quit">그만하기</button>
- </section>
+</section>
 
- <section id="end" class="hide">
-  <div class="big">🎉</div>
-  <h1 style="text-align:center">끝!</h1>
-  <p class="sub" style="text-align:center" id="sum"></p>
-  <div class="rows" id="rows"></div>
-  <button class="btn" id="again">다시 하기</button>
-  <button class="btn ghost" id="share1">링크 공유</button>
- </section>
- <div class="foot">내 선택은 이 기기에만 저장돼요.</div>
+<section id="play" class="screen" hidden>
+  <h1 class="sr">밸런스 게임</h1>
+  <div class="scale full">
+    <div class="beam" id="beam"><i class="half a"></i><i class="half b"></i></div>
+    <div class="bar">
+      <span class="count" id="count"></span>
+      <button id="quit">그만하기</button>
+    </div>
+    <button class="choice top" id="ca"><span class="lab disp" id="ta"></span></button>
+    <button class="choice bot" id="cb"><span class="lab disp" id="tb"></span></button>
+    <i class="pivot dot" aria-hidden="true"></i>
+  </div>
+</section>
+
+<section id="end" class="screen" hidden>
+  <h1 class="sr">결과</h1>
+  <div class="scale hero">
+    <div class="beam" id="heroBeam"><i class="half a"></i><i class="half b"></i></div>
+    <div class="pane top">
+      <p class="num disp" id="n1"></p>
+      <p class="cap" id="c1"></p>
+    </div>
+    <div class="pane bot">
+      <p class="num disp" id="n2"></p>
+      <p class="cap" id="c2"></p>
+    </div>
+    <i class="pivot dot" aria-hidden="true"></i>
+  </div>
+  <div class="wrap">
+    <div class="actions">
+      <button class="btn primary" id="share">친구에게 링크 보내기</button>
+      <button class="btn alt" id="again">처음으로</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <h2>내가 고른 것</h2>
+    <ul class="rows" id="rows"></ul>
+  </div>
+</section>
 </main>
+<p class="sr" id="live" aria-live="polite"></p>
 
 <script>
+const CATS=["전체","음식","연애","일상","극한","학교"];
 const Q=[
-// 음식
 ["음식","평생 치킨만 먹기","평생 피자만 먹기"],
-["음식","라면에 밥 말기","라면에 밥 안 말기"],
+["음식","라면에 밥 말아 먹기","라면은 면만 먹기"],
 ["음식","민트초코 평생 금지","파인애플 피자 평생 금지"],
 ["음식","물냉면","비빔냉면"],
 ["음식","탕수육 부먹","탕수육 찍먹"],
-["음식","아침 안 먹고 점심 두 배","아침·점심 보통, 저녁 굶기"],
-["음식","매운 음식 못 먹기","단 음식 못 먹기"],
+["음식","하루 두 끼, 양은 무제한","하루 세 끼, 양은 적게"],
+["음식","매운 음식 평생 못 먹기","단 음식 평생 못 먹기"],
 ["음식","평생 커피 못 마시기","평생 탄산 못 마시기"],
-// 연애
-["연애","연락 칼답인데 만남 적은 사람","연락 느린데 매일 만나는 사람"],
-["연애","전 애인과 같은 반 되기","현 애인 전 애인과 친구인 거 알기"],
-["연애","10년 사귄 사람과 결혼","운명 같은 첫눈에 반한 사람과 결혼"],
-["연애","내 폰 검사받기","상대 폰 검사하기"],
-["연애","기념일 매번 챙기는 사람","기념일 안 챙기지만 평소에 잘하는 사람"],
-["연애","데이트 늘 집에서","데이트 늘 밖에서"],
-// 일상
-["일상","1년 동안 샤워 못 하기, 대신 1억","정상 생활, 보상 없음"],
+["연애","연락은 칼답인데 잘 못 만나는 사람","연락은 느린데 매일 만나는 사람"],
+["연애","전 애인과 같은 팀플 하기","지금 애인이 내 전 애인과 친구인 걸 알기"],
+["연애","10년 사귄 사람과 결혼","만난 지 한 달, 운명 같은 사람과 결혼"],
+["연애","내 폰을 검사받기","상대 폰을 검사하기"],
+["연애","기념일을 매번 챙기는 사람","기념일은 못 챙기지만 평소에 잘하는 사람"],
+["연애","데이트는 늘 집에서","데이트는 늘 밖에서"],
+["일상","1억 받고 1년 동안 샤워 안 하기","평범하게 1년 보내기"],
 ["일상","평생 여름만 살기","평생 겨울만 살기"],
-["일상","하루 4시간만 자도 멀쩡","하루 10시간 자야 하지만 항상 개운"],
+["일상","하루 4시간만 자도 멀쩡하기","하루 10시간 자야 하지만 늘 개운하기"],
 ["일상","순간이동 능력","투명인간 능력"],
-["일상","과거로 가기","미래로 가기"],
-["일상","핸드폰 없이 한 달","노트북 없이 한 달"],
-["일상","평생 이어폰 한쪽만 사용","평생 양쪽 다 쓰지만 가끔 노래 끊김"],
-["일상","친구 많고 얕은 관계","친구 둘뿐인 깊은 관계"],
+["일상","과거로 돌아가기","미래로 가 보기"],
+["일상","한 달 동안 휴대폰 없이 살기","한 달 동안 노트북 없이 살기"],
+["일상","친구는 많지만 얕은 관계","친구는 둘뿐이지만 깊은 관계"],
 ["일상","월 300 받는 칼퇴 직장","월 600 받는 야근 직장"],
-["일상","매일 지각 면제권","매일 1만 원 받기"],
-["일상","SNS 영구 삭제","유튜브·넷플릭스 영구 삭제"],
-["일상","내 생각이 남들에게 들리기 하루","내 검색 기록이 공개되기 하루"],
-// 극한
-["극한","모기 100마리와 한방","바퀴벌레 3마리와 한방"],
-["극한","화장실 없는 곳에서 하루","샤워 불가 일주일"],
-["극한","좀비 세상에서 혼자 생존","좀비 세상에서 친구 3명과 약하게 생존"],
+["일상","하루에 한 번 지각 무료 면제","매일 1만 원 받기"],
+["일상","SNS 영구 삭제","유튜브와 넷플릭스 영구 삭제"],
+["일상","하루 동안 내 생각이 남들에게 들리기","하루 동안 내 검색 기록이 공개되기"],
+["일상","하루 종일 젖은 양말 신기","하루 종일 한쪽 신발만 신기"],
+["극한","모기 100마리와 한방 쓰기","바퀴벌레 3마리와 한방 쓰기"],
+["극한","좀비 세상에서 혼자 강하게 살기","좀비 세상에서 친구 3명과 약하게 살기"],
 ["극한","평생 맛 못 느끼기","평생 냄새 못 맡기"],
-["극한","로또 1등 당첨, 대신 가족 모르게","로또 없음, 대신 평생 건강"],
-["극한","거짓말하면 코가 길어짐","진실만 말하게 됨"],
-// 학교·이공계
-["학교","시험 전날 벼락치기 A","꾸준히 공부한 B"],
-["학교","팀플 무임승차 팀원 있는 A+","혼자 하는 B+"],
-["학교","교수님이 내 이름 전부 암기","교수님이 내 이름 모름"],
-["학교","중간고사 없는 대신 기말 두 배","중간·기말 보통"],
-["학교","아침 9시 수업만 평생","저녁 7시 수업만 평생"],
-["학교","MATLAB 평생 쓰기","Python 평생 쓰기"],
-["학교","실험 데이터 전부 날아가기","보고서 마감 하루 전 발견하기"],
-["학교","엔진 시험 중 폭발음 소리만 나기","엔진 시험 성공하지만 아무도 안 봄"],
-["학교","풍동 실험실 상주","터빈 시험장 상주"],
-["학교","전공책 새 책 전부 지급","중고 전공책 + 월 10만 원"]
+["극한","로또 1등에 당첨되지만 아무에게도 말 못 하기","평생 아프지 않기"],
+["극한","거짓말하면 코가 길어지기","거짓말을 아예 못 하게 되기"],
+["학교","벼락치기로 A 받기","꾸준히 공부해서 B+ 받기"],
+["학교","무임승차 팀원이 있는 A+ 팀플","혼자 하는 B+ 과제"],
+["학교","발표 때마다 지목당하는 교수님 수업","출석만 부르는 교수님 수업"],
+["학교","중간고사 없이 기말 비중 두 배","중간고사와 기말 보통"],
+["학교","학기 내내 9시 수업","학기 내내 저녁 7시 수업"],
+["학교","MATLAB만 평생 쓰기","Python만 평생 쓰기"],
+["학교","마감 하루 전에 실험 데이터가 전부 날아가기","마감 당일에 실험 오차가 너무 크다는 걸 알기"],
+["학교","시험 직전에 엔진 시동이 안 걸리기","시험이 끝난 뒤 데이터 로거가 꺼져 있었다는 걸 알기"],
+["학교","방학을 풍동 실험실에서 보내기","방학을 터빈 시험장에서 보내기"],
+["학교","전공책을 전부 새 책으로 받기","전공책은 중고, 대신 학기마다 10만 원 받기"]
 ];
-const CATS=["전체","음식","연애","일상","극한","학교"];
-let sel="전체",deck=[],i=0,ans=[];
+
 const $=id=>document.getElementById(id);
-function show(id){["home","play","end"].forEach(x=>$(x).classList.toggle("hide",x!==id));
- if(id==="play")$("play").style.display="flex"}
-function chips(){const c=$("chips");c.innerHTML="";CATS.forEach(n=>{const b=document.createElement("button");
- b.className="chip"+(n===sel?" on":"");b.textContent=n;b.onclick=()=>{sel=n;chips()};c.appendChild(b)})}
-function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
-function start(){deck=shuffle(Q.filter(q=>sel==="전체"||q[0]===sel));i=0;ans=[];show("play");render()}
-function render(){const q=deck[i];$("cat").textContent=q[0];$("pos").textContent=(i+1)+" / "+deck.length;
- $("prog").style.width=(i/deck.length*100)+"%";$("qn").textContent="Q"+(i+1);
- $("ca").textContent=q[1];$("cb").textContent=q[2];$("ca").classList.remove("dim");$("cb").classList.remove("dim")}
-let lock=false;
-function pick(s){if(lock)return;lock=true;ans.push(s);
- $(s==="a"?"cb":"ca").classList.add("dim");
- setTimeout(()=>{lock=false;i++;i>=deck.length?finish():render()},260)}
-function finish(){show("end");$("sum").textContent=deck.length+"문제를 풀었어요.";
- $("rows").innerHTML=deck.map((q,n)=>{const a=ans[n]==="a";
-  return `<div class="row"><small>Q${n+1} · ${q[0]}</small><b class="${a?"":"b"}">${a?"A":"B"}</b> ${a?q[1]:q[2]}</div>`}).join("");
- try{localStorage.setItem("bg_last",JSON.stringify({t:Date.now(),n:deck.length}))}catch(e){}}
-async function share(){const url=location.href.split("#")[0];
- try{if(navigator.share){await navigator.share({title:"밸런스 게임",text:"밸런스 게임 같이 해요!",url});return}}catch(e){return}
- try{await navigator.clipboard.writeText(url);alert("링크를 복사했어요")}catch(e){prompt("링크를 복사하세요",url)}}
-$("start").onclick=start;$("ca").onclick=()=>pick("a");$("cb").onclick=()=>pick("b");
-$("quit").onclick=()=>{ans.length?(deck=deck.slice(0,ans.length),finish()):show("home")};
-$("again").onclick=()=>show("home");$("share0").onclick=share;$("share1").onclick=share;
-chips();
+const reduce=matchMedia("(prefers-reduced-motion: reduce)");
+let sel=0,seed=0,deck=[],i=0,ans=[],friend=null,lock=false,statusTimer=0;
+
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function build(s,c){const pool=Q.filter(q=>c===0||q[0]===CATS[c]);const r=rng(s);
+  for(let k=pool.length-1;k>0;k--){const j=Math.floor(r()*(k+1));[pool[k],pool[j]]=[pool[j],pool[k]]}return pool}
+function readLink(){
+  const p=new URLSearchParams(location.hash.slice(1));
+  const s=parseInt(p.get("s"),10),c=parseInt(p.get("c"),10),r=p.get("r")||"";
+  if(Number.isInteger(s)&&c>=0&&c<CATS.length&&/^[01]{1,60}$/.test(r)&&r.length<=build(s,c).length)return{s,c,r};
+  return null}
+function setBeam(el,k,base){el.style.setProperty("--k",k);el.style.setProperty("--base",(base||0)+"deg")}
+function show(id){["home","play","end"].forEach(x=>{$(x).hidden=x!==id});window.scrollTo(0,0)}
+const tilt=()=>+(Math.random()*5-2.5).toFixed(2);
+
+function renderHome(){
+  show("home");
+  $("lead").textContent=friend
+    ?`친구가 ${friend.r.length}문제를 풀었어요. 같은 문제를 풀고 얼마나 겹치는지 확인해 보세요.`
+    :"둘 중 하나만 고르세요. 정답은 없습니다.";
+  $("cats").hidden=!!friend;$("solo").hidden=!friend;
+  const box=$("cats");box.textContent="";
+  CATS.forEach((n,k)=>{const b=document.createElement("button");b.className="cat";b.textContent=n;
+    b.setAttribute("aria-pressed",String(k===sel));b.onclick=()=>{sel=k;renderHome()};box.appendChild(b)});
+}
+function start(){
+  if(friend){seed=friend.s;sel=friend.c;deck=build(seed,sel).slice(0,friend.r.length)}
+  else{seed=Math.floor(Math.random()*2147483647);deck=build(seed,sel)}
+  i=0;ans=[];lock=false;show("play");setBeam($("beam"),0,tilt());paint(false);
+}
+function paint(animate){
+  const q=deck[i];$("ta").textContent=q[1];$("tb").textContent=q[2];
+  $("count").textContent=`${i+1} / ${deck.length}`;
+  $("live").textContent=`${i+1}번째 문제`;
+  ["ca","cb"].forEach(id=>$(id).classList.remove("won","lost"));
+  if(animate&&!reduce.matches)["ta","tb"].forEach(id=>$(id).animate(
+    [{opacity:0,transform:"translateY(10px)"},{opacity:1,transform:"none"}],{duration:260,easing:"cubic-bezier(.2,.8,.2,1)"}));
+}
+function pick(side){
+  if(lock)return;lock=true;ans.push(side);
+  const win=side===0?"ca":"cb",lose=side===0?"cb":"ca";
+  $(win).classList.add("won");$(lose).classList.add("lost");
+  setBeam($("beam"),side===0?1:-1,0);
+  setTimeout(()=>{
+    i++;
+    if(i>=deck.length){lock=false;finish();return}
+    setBeam($("beam"),0,tilt());paint(true);lock=false;
+  },reduce.matches?0:420);
+}
+function finish(){
+  deck=deck.slice(0,ans.length);
+  const f=friend?friend.r.slice(0,ans.length):null;
+  const same=f?ans.filter((v,k)=>String(v)===f[k]).length:0;
+  const diff=ans.length-same;
+  show("end");
+  if(f){
+    $("n1").textContent=same;$("c1").textContent="같은 선택";
+    $("n2").hidden=false;$("n2").textContent=diff;$("c2").textContent="다른 선택";
+  }else{
+    $("n1").textContent=ans.length;$("c1").textContent="문제를 풀었어요";
+    $("n2").hidden=true;$("c2").textContent="링크를 보내면 친구가 같은 문제를 풀고, 겹친 선택을 비교할 수 있어요.";
+  }
+  const hb=$("heroBeam");setBeam(hb,0,0);
+  const k=f?(same-diff)/ans.length:0;
+  if(reduce.matches)setBeam(hb,k,0);else requestAnimationFrame(()=>requestAnimationFrame(()=>setBeam(hb,k,0)));
+  const ul=$("rows");ul.textContent="";
+  deck.forEach((q,n)=>{
+    const m=ans[n],li=document.createElement("li");
+    const sw=document.createElement("i");sw.className="sw "+(m===0?"a":"b");sw.setAttribute("aria-hidden","true");
+    const d=document.createElement("div"),p=document.createElement("span"),o=document.createElement("s");
+    p.className="pick";p.textContent=q[1+m];o.className="drop";o.textContent=q[2-m];
+    d.append(p,o);li.append(sw,d);
+    if(f){const t=document.createElement("span");t.className="tag";t.textContent=String(m)===f[n]?"친구도 선택":"친구는 반대";li.append(t)}
+    ul.appendChild(li);
+  });
+}
+function flash(msg){const s=$("status");s.textContent=msg;clearTimeout(statusTimer);statusTimer=setTimeout(()=>{s.textContent=""},3200)}
+async function share(){
+  const url=location.href.split("#")[0]+"#s="+seed+"&c="+sel+"&r="+ans.join("");
+  try{if(navigator.share){await navigator.share({title:"밸런스 게임",text:"같은 문제를 풀고 내 선택과 비교해 보세요.",url});return}}
+  catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(url);flash("링크를 복사했어요.")}
+  catch(e){history.replaceState(null,"",url);flash("자동 복사에 실패했어요. 주소창의 링크를 복사해 보내세요.")}
+}
+
+$("start").onclick=start;
+$("ca").onclick=()=>pick(0);$("cb").onclick=()=>pick(1);
+$("quit").onclick=()=>{if(lock)return;ans.length?finish():renderHome()};
+$("again").onclick=()=>{friend=readLink();renderHome()};
+$("solo").onclick=()=>{friend=null;history.replaceState(null,"",location.href.split("#")[0]);renderHome()};
+$("share").onclick=share;
+addEventListener("keydown",e=>{if($("play").hidden)return;
+  if(e.key==="ArrowUp"||e.key==="1")pick(0);else if(e.key==="ArrowDown"||e.key==="2")pick(1)});
+friend=readLink();renderHome();
 </script>
 </body>
 </html>
